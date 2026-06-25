@@ -1,22 +1,13 @@
-from fastapi import Header, HTTPException, status
-from app.constants import API_KEY
-from app.database.core import create_payment_workflow
-from app.database.models import Payments
-from app.entities import CreatePaymentCommand, Status
-from app.database.core import get_payment_by_id
-
 from datetime import datetime, timezone
 from uuid import uuid4
 
-
-async def verify_api_key(
-    x_api_key: str = Header(..., alias="X-API-Key"),
-):
-    if x_api_key != API_KEY:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid API Key",
-        )
+from app.application.payments.commands import CreatePaymentCommand
+from app.domain.payments.enums import Status
+from app.infrastructure.persistence.sqlalchemy.models import Payments
+from app.infrastructure.persistence.sqlalchemy.repositories import (
+    create_payment_workflow,
+    get_payment_by_id,
+)
 
 
 def build_payment(cmd: CreatePaymentCommand) -> Payments:

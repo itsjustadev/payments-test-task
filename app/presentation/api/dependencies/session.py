@@ -1,4 +1,4 @@
-from app.database.core import AsyncSessionLocal
+from app.infrastructure.persistence.session import AsyncSessionLocal
 
 
 async def get_session():

@@ -3,7 +3,7 @@ version: "3.9"
 services:
   api:
     build: .
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+    command: uvicorn app.presentation.api.main:app --host 0.0.0.0 --port 8000
     env_file:
       - .env
     ports:
@@ -14,7 +14,7 @@ services:
       
   consumer:
     build: .
-    command: faststream run app.messaging.app:app
+    command: faststream run app.presentation.consumers.app:app
     env_file:
       - .env
     depends_on:
@@ -23,7 +23,7 @@ services:
 
   outbox_workers:
     build: .
-    command: python -m app.workers.main
+    command: python -m app.presentation.workers.main
     env_file:
       - .env
     depends_on:

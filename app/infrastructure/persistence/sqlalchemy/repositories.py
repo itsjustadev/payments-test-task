@@ -1,22 +1,18 @@
 import logging
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
-
-from app.database.models import Base, Payments, Outbox
-from sqlalchemy import select
-from sqlalchemy.dialects.postgresql import insert
 from datetime import datetime, timezone
 from uuid import UUID
-from app.database.setup import DATABASE_URL, async_engine
 
-AsyncSessionLocal: async_sessionmaker[AsyncSession] = async_sessionmaker(
-    async_engine, class_=AsyncSession, expire_on_commit=False
-)
+from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.ext.asyncio import AsyncSession
 
-logger = logging.getLogger("app.database")
+from app.infrastructure.persistence.sqlalchemy.models import Base, Payments, Outbox
+
+logger = logging.getLogger("app.infrastructure.persistence")
 
 
-async def create_all_tables(async_engine):
-    async with async_engine.begin() as conn:
+async def create_all_tables(engine):
+    async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     logger.info("Database tables created successfully")
 
@@ -66,7 +62,6 @@ async def create_payment_workflow(
     session: AsyncSession,
     payment: Payments,
 ) -> Payments:
-
     inserted = await insert_payment(session, payment)
 
     if inserted:
@@ -85,7 +80,6 @@ async def create_payment_workflow(
 
 
 async def get_unprocessed_events(session: AsyncSession, limit: int = 100):
-
     result = await session.execute(
         select(Outbox)
         .where(Outbox.processed_at.is_(None))
@@ -109,7 +103,6 @@ async def get_payment_by_id(
     session: AsyncSession,
     payment_id: UUID,
 ) -> Payments | None:
-
     result = await session.execute(
         select(Payments).where(Payments.payment_id == payment_id)
     )

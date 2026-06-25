@@ -1,45 +1,14 @@
-from app.database.core import (
-    get_unprocessed_events,
-    mark_as_processed,
-    mark_failed,
+import asyncio
+from datetime import datetime, timedelta, timezone
+
+import httpx
+
+from app.infrastructure.http.webhook_client import send_webhook
+from app.infrastructure.persistence.sqlalchemy.models import Outbox
+from app.infrastructure.persistence.sqlalchemy.repositories import (
     get_payment_by_id,
     get_webhook_events,
 )
-import asyncio
-from app.database.models import Outbox
-from datetime import datetime, timedelta, timezone
-import httpx
-from app.messaging.publisher import EventPublisher
-
-publisher = EventPublisher()
-
-
-async def outbox_worker(session_factory, publisher: EventPublisher):
-    print("outbox worker started")
-    while True:
-        async with session_factory() as session:
-            async with session.begin():
-                events = await get_unprocessed_events(session)
-                print(events)
-
-        print(f"📦 EVENTS COUNT: {len(events)}")
-
-        for event in events:
-            try:
-                print("📤 BEFORE PUBLISH")
-                await publisher.publish(event)
-                print("📤 AFTER PUBLISH")
-
-                async with session_factory() as session:
-                    async with session.begin():
-                        await mark_as_processed(session, event)
-
-            except Exception as e:
-                async with session_factory() as session:
-                    async with session.begin():
-                        await mark_failed(session, event, str(e))
-
-        await asyncio.sleep(1)
 
 
 async def webhook_worker(session_factory):
@@ -51,12 +20,10 @@ async def webhook_worker(session_factory):
 
 
 async def process_webhook(session_factory, client):
-
     async with session_factory() as session:
         async with session.begin():
             events = await get_webhook_events(session)
             for event in events:
-
                 payload = build_webhook_payload(event)
                 payment = await get_payment_by_id(session, event.payload["payment_id"])
                 if payment is None:
@@ -97,11 +64,3 @@ def build_webhook_payload(event: Outbox) -> dict:
         "amount": event.payload["amount"],
         "currency": event.payload["currency"],
     }
-
-
-async def send_webhook(client, url: str, payload: dict) -> bool:
-    try:
-        response = await client.post(url, json=payload)
-        return 200 <= response.status_code < 300
-    except Exception:
-        return False

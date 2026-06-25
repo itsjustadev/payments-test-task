@@ -1,18 +1,18 @@
-from datetime import datetime, timezone
-import random
 import asyncio
+import random
+from datetime import datetime, timezone
 
-from app.messaging.broker import broker
-from app.database.core import AsyncSessionLocal, get_payment_by_id
-from app.database.models import Status, Payments, Outbox
+from app.domain.payments.enums import Status
+from app.infrastructure.messaging.broker import broker
+from app.infrastructure.persistence.session import AsyncSessionLocal
+from app.infrastructure.persistence.sqlalchemy.models import Payments, Outbox
+from app.infrastructure.persistence.sqlalchemy.repositories import get_payment_by_id
 
 
 @broker.subscriber("payment.created")
 async def handle_payment_created(message: dict):
-
     async with AsyncSessionLocal() as session:
         async with session.begin():
-
             payment = await get_payment_by_id(session, message["payment_id"])
 
             if payment is None or payment.processed_at:

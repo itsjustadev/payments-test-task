@@ -1,5 +1,5 @@
-from app.messaging.broker import broker
-from app.database.models import Outbox
+from app.infrastructure.messaging.broker import broker
+from app.infrastructure.persistence.sqlalchemy.models import Outbox
 
 
 class EventPublisher:

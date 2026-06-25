@@ -1,22 +1,12 @@
-from enum import Enum
 from uuid import UUID, uuid4
 from decimal import Decimal
 from datetime import datetime, timezone
 
-from sqlalchemy import (
-    Enum,
-    Numeric,
-    Integer,
-    LargeBinary,
-    UniqueConstraint,
-    DateTime,
-    String,
-)
+from sqlalchemy import Enum, Numeric, DateTime, String
 from sqlalchemy.dialects.postgresql import UUID as PG_UUID, JSONB
-from sqlalchemy.orm import Mapped, mapped_column, relationship, declarative_base
-from sqlalchemy import UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, declarative_base
 
-from app.database.enums import Status, Currency
+from app.domain.payments.enums import Status, Currency
 
 Base = declarative_base()
 

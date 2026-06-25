@@ -1,6 +1,7 @@
-from fastapi import FastAPI
 from dotenv import load_dotenv
-from app.api import router as api_router
+from fastapi import FastAPI
+
+from app.presentation.api.router import router as api_router
 
 load_dotenv()
 
